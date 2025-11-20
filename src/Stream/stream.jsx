@@ -287,21 +287,7 @@ function Stream() {
     <div className="min-h-screen bg-black text-white">
       <div className="relative w-screen h-[60vh] lg:h-[70vh] overflow-hidden left-1/2 -translate-x-1/2">
         {isPlaying && playerSrc ? (
-          <div className="absolute inset-0">
-            <iframe
-              title={title}
-              src={playerSrc}
-              className="h-full w-full border-0"
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
-              onLoad={() => setIsPlayerLoading(false)}
-            />
-            {isPlayerLoading && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black">
-                <div className="h-10 w-10 rounded-full border-4 border-[#9146FF] border-t-transparent animate-spin" />
-              </div>
-            )}
-          </div>
+          <div className="absolute inset-0 bg-black" />
         ) : (
           backdropUrl && (
             <div
@@ -368,16 +354,7 @@ function Stream() {
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => {
-              setIsPlaying(false);
-              setIsPlayerLoading(false);
-            }}
-            className="absolute right-4 top-4 z-20 rounded-full bg-black/70 px-3 py-1 text-sm hover:bg-black cursor-pointer"
-          >
-            ✕ Close
-          </button>
+          <div className="absolute inset-0 bg-black" />
         )}
       </div>
 
@@ -464,6 +441,8 @@ function Stream() {
                 src={playerSrc}
                 className="w-full h-full border-0"
                 allow="autoplay; fullscreen; picture-in-picture"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-presentation"
+                referrerPolicy="no-referrer"
                 allowFullScreen
                 onLoad={() => setIsPlayerLoading(false)}
               />
