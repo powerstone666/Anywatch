@@ -21,6 +21,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import InputAdornment from "@mui/material/InputAdornment";
 import CastIcon from "@mui/icons-material/Cast";
+import GetAppIcon from "@mui/icons-material/GetApp";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -36,9 +37,48 @@ function Navbar() {
   }, [location.pathname, location.search]);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = React.useState(false);
+  const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+  const [showInstallButton, setShowInstallButton] = React.useState(false);
 
   const toggleMenu = (open) => () => setMobileMenuOpen(open);
   const toggleSearch = (open) => () => setMobileSearchOpen(open);
+
+  // Listen for PWA install prompt
+  React.useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      console.log('👋 PWA Install Prompt fired!');
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallButton(true);
+    };
+
+    const handleAppInstalled = () => {
+      console.log('✅ App installed successfully');
+      setShowInstallButton(false);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      setShowInstallButton(false);
+    }
+    
+    setDeferredPrompt(null);
+  };
 
   const isActivePath = (path) => {
     if (path === "/") {
@@ -48,27 +88,27 @@ function Navbar() {
   };
 
   const navButtonClass = (active) =>
-    `cursor-pointer px-1 py-1 transition-colors ${
+    `cursor-pointer px-3 py-2 transition-all duration-300 ${
       active
         ? "text-white border-b-2 border-[#9146ff]"
-        : "text-gray-300 hover:text-[#9146ff]"
+        : "text-gray-300 hover:text-white"
     }`;
 
   return (
-    <nav className="sticky top-0 z-30 border-b border-gray-700 bg-black/70 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-8">
+    <nav className="sticky top-0 z-30 bg-black/75 backdrop-blur-xl border-b border-white/10 shadow-2xl shadow-black/50">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
         {/* Logo - left */}
         <div
-          className="flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2 cursor-pointer group"
           onClick={() => navigate("/")}
         >
-          <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-[#9146ff] to-[#b097ff] bg-clip-text text-transparent">
-            Any<span className="ml-1 text-transparent">Watch</span>
+          <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-[#9146ff] via-[#b097ff] to-[#9146ff] bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(145,70,255,0.5)] transition-all group-hover:drop-shadow-[0_0_15px_rgba(145,70,255,0.8)]">
+            Any<span className="ml-0.5 text-transparent">Watch</span>
           </h1>
         </div>
 
         {/* Center nav links - Netflix-style */}
-        <div className="hidden items-center gap-6 text-sm font-medium md:flex">
+        <div className="hidden items-center gap-3 text-sm font-semibold md:flex">
           <button
             type="button"
             className={navButtonClass(isActivePath("/"))}
@@ -96,7 +136,7 @@ function Navbar() {
             className={navButtonClass(isActivePath("/new"))}
             onClick={() => navigate("/new")}
           >
-            New &amp; popular
+            New &amp; Popular
           </button>
         </div>
 
@@ -129,8 +169,8 @@ function Navbar() {
             </span>
             <input
               type="text"
-              placeholder="Search"
-              className="w-full max-w-md rounded-full border border-gray-700 bg-gray-800 px-4 py-2 pl-10 text-sm text-white outline-none placeholder:text-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/60 cursor-text"
+              placeholder="Search movies, shows..."
+              className="w-full max-w-md rounded-full border border-white/20 bg-white/5 backdrop-blur-sm px-4 py-2.5 pl-10 text-sm text-white outline-none placeholder:text-gray-400 focus:border-[#9146ff] focus:ring-2 focus:ring-[#9146ff]/40 focus:bg-white/10 transition-all cursor-text shadow-lg"
               value={searchText}
               onFocus={() => {
                 const params = new URLSearchParams(location.search);
@@ -153,6 +193,18 @@ function Navbar() {
               }}
             />
           </div>
+
+          {/* PWA Install Button */}
+          {showInstallButton && (
+            <IconButton
+              onClick={handleInstallClick}
+              size="medium"
+              aria-label="Install app"
+              sx={{ color: '#9146ff', '&:hover': { color: '#b097ff' }, p: 0.5 }}
+            >
+              <GetAppIcon fontSize="medium" />
+            </IconButton>
+          )}
 
           <IconButton
             size="medium"
@@ -189,9 +241,9 @@ function MobileCategoryDrawer({ open, onClose }) {
       open={open}
       onClose={onClose}
       transitionDuration={300}
-      PaperProps={{ sx: { height: '100vh', width: 224, bgcolor: 'black' } }}
+      PaperProps={{ sx: { height: '100vh', width: 256, bgcolor: '#0a0a0a', backdropFilter: 'blur(20px)', borderLeft: '1px solid rgba(255,255,255,0.1)' } }}
     >
-  <List className="h-full w-56 bg-black px-2 flex flex-col justify-center space-y-2">
+  <List className="h-full w-64 bg-gradient-to-br from-black via-zinc-950 to-black px-3 flex flex-col justify-center space-y-3">
         {items.map((item) => (
           <ListItem key={item.text} disablePadding className="shrink-0">
             <ListItemButton
@@ -201,12 +253,12 @@ function MobileCategoryDrawer({ open, onClose }) {
                 }
                 onClose();
               }}
-              className="py-3 px-2 rounded-md hover:bg-white/5"
+              className="py-4 px-4 rounded-xl hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-[#9146ff]/30 hover:shadow-lg hover:shadow-[#9146ff]/10"
             >
-              <ListItemIcon sx={{ color: '#9146ff' }} className="min-w-[40px]">
+              <ListItemIcon sx={{ color: '#9146ff' }} className="min-w-11">
                 {item.icon}
               </ListItemIcon>
-              <ListItemText primary={item.text} className="text-white" />
+              <ListItemText primary={item.text} className="text-white" primaryTypographyProps={{ fontWeight: 600, fontSize: '1rem' }} />
             </ListItemButton>
           </ListItem>
         ))}
@@ -229,18 +281,15 @@ function MobileSearchDialog({ open, onClose }) {
     }
   }, [location.pathname, location.search]);
 
-  return (
-    <Dialog open={open} onClose={onClose} fullScreen transitionDuration={300}>
-      <DialogContent className="bg-black flex flex-col p-4">
-        {/* Top bar: back arrow */}
-        <div className="flex items-center gap-2 mb-4">
-          <IconButton onClick={onClose} sx={{ color: '#9146ff', '&:hover': { color: '#b097ff' } }} aria-label="back">
-            <ArrowBackIcon color="inherit" />
-          </IconButton>
-          <div className="flex-1" />
-        </div>
+  if (!open) return null;
 
-        <div className="flex items-center mb-4">
+  return (
+    <div className="fixed inset-x-0 top-16 z-20 bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl animate-in slide-in-from-top duration-300">
+      <div className="p-4 max-w-7xl mx-auto">
+        <div className="flex items-center gap-3">
+          <IconButton onClick={onClose} sx={{ color: '#9146ff', '&:hover': { color: '#b097ff' } }} aria-label="back">
+            <ArrowBackIcon />
+          </IconButton>
           <TextField
             autoFocus
             fullWidth
@@ -290,11 +339,10 @@ function MobileSearchDialog({ open, onClose }) {
               },
               input: { color: '#fff' },
             }}
-            className="flex-1"
           />
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
 

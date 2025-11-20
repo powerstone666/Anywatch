@@ -4,6 +4,7 @@ import {
   fetchMediaDetails,
   fetchRecommendations,
   fetchSeasonDetails,
+  fetchSimilar,
 } from '../Api-services/tmbd';
 
 function Stream() {
@@ -39,6 +40,39 @@ function Stream() {
     }
     return () => {
       document.body.classList.remove('overflow-hidden');
+    };
+  }, [isPlaying]);
+
+  // Lock screen orientation to landscape on mobile when playing
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const lockOrientation = async () => {
+      try {
+        // Check if screen orientation API is supported
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock('landscape');
+        }
+      } catch (err) {
+        // Orientation lock failed or not supported, continue anyway
+        console.log('Orientation lock not supported:', err);
+      }
+    };
+
+    const unlockOrientation = () => {
+      try {
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      } catch (err) {
+        console.log('Orientation unlock failed:', err);
+      }
+    };
+
+    lockOrientation();
+
+    return () => {
+      unlockOrientation();
     };
   }, [isPlaying]);
 
@@ -86,14 +120,21 @@ function Stream() {
     };
   }, [id, mediaType]);
 
-  // Load recommendations once details are available
+  // Load recommendations once details are available, fallback to similar if empty
   useEffect(() => {
     let cancelled = false;
 
     async function loadRecommendations() {
       if (!details || !id) return;
       try {
-        const recs = await fetchRecommendations(mediaType, id);
+        // Try recommendations first
+        let recs = await fetchRecommendations(mediaType, id);
+        
+        // If recommendations are empty, try similar content
+        if (!recs || recs.length === 0) {
+          recs = await fetchSimilar(mediaType, id);
+        }
+        
         if (cancelled) return;
         setRecommended(Array.isArray(recs) ? recs : []);
       } catch {
@@ -112,7 +153,7 @@ function Stream() {
 
   // For TV, set default season once details loaded
   useEffect(() => {
-    if (mediaType !== 'tv' || !details) return;
+    if ((mediaType !== 'tv' && mediaType !== 'anime') || !details) return;
 
     const seasonsArr = Array.isArray(details.seasons) ? details.seasons : [];
     const defaultSeason =
@@ -125,7 +166,7 @@ function Stream() {
 
   // Load episodes for selected season (TV only)
   useEffect(() => {
-    if (mediaType !== 'tv' || !id || selectedSeason == null) return;
+    if ((mediaType !== 'tv' && mediaType !== 'anime') || !id || selectedSeason == null) return;
     if (seasonEpisodes[selectedSeason]) return;
 
     let cancelled = false;
@@ -191,7 +232,7 @@ function Stream() {
         ageRating = withCert.certification;
       }
     }
-  } else if (mediaType === 'tv' && details?.content_ratings?.results) {
+  } else if ((mediaType === 'tv' || mediaType === 'anime') && details?.content_ratings?.results) {
     const results = details.content_ratings.results;
     const byCountry = (code) =>
       results.find((r) => r.iso_3166_1 === code && r.rating);
@@ -206,7 +247,7 @@ function Stream() {
   let seasonsLabel = null;
   let episodesLabel = null;
 
-  if (mediaType === 'tv') {
+  if (mediaType === 'tv' || mediaType === 'anime') {
     const seasons = details?.number_of_seasons;
     const firstSeason =
       Array.isArray(details?.seasons) && details.seasons.length > 0
@@ -233,7 +274,7 @@ function Stream() {
       : []) || [];
 
   const tvEpisodes =
-    mediaType === 'tv' && selectedSeason != null
+    (mediaType === 'tv' || mediaType === 'anime') && selectedSeason != null
       ? (seasonEpisodes[selectedSeason] || []).filter((ep) => {
           if (!ep.air_date) return false;
           const todayStr = new Date().toISOString().slice(0, 10);
@@ -244,7 +285,7 @@ function Stream() {
   const cinemaOsBaseUrl = 'https://cinemaos.tech/player';
   let playerSrc = null;
   if (id) {
-    if (mediaType === 'tv') {
+    if (mediaType === 'tv' || mediaType === 'anime') {
       const seasonNum = selectedSeason || 1;
       const firstEpisodeNumber =
         (tvEpisodes[0] && tvEpisodes[0].episode_number) || 1;
@@ -285,9 +326,26 @@ function Stream() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="relative w-screen h-[60vh] lg:h-[70vh] overflow-hidden left-1/2 -translate-x-1/2">
+      <div className="relative w-screen h-[50vh] md:h-[60vh] lg:h-[70vh] overflow-hidden left-1/2 -translate-x-1/2">
         {isPlaying && playerSrc ? (
           <div className="absolute inset-0 bg-black" />
+        ) : trailerKey ? (
+          <div className="absolute inset-0 overflow-hidden">
+            <iframe
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{
+                width: '100vw',
+                height: '56.25vw', // 16:9 aspect ratio
+                minHeight: '100%',
+                minWidth: '177.77vh', // 16:9 aspect ratio
+              }}
+              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${trailerKey}&modestbranding=1`}
+              title="Trailer"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              onError={() => setTrailerKey(null)}
+            />
+          </div>
         ) : (
           backdropUrl && (
             <div
@@ -298,57 +356,55 @@ function Stream() {
         )}
 
         {!isPlaying && (
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
         )}
 
         {!isPlaying && (
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="absolute left-4 top-4 z-20 rounded-full bg-black/70 px-3 py-1 text-sm hover:bg-black cursor-pointer"
+            className="absolute left-3 top-3 md:left-4 md:top-4 z-20 rounded-full bg-black/90 backdrop-blur-sm px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm hover:bg-black cursor-pointer border border-white/20 shadow-lg active:scale-95 transition-transform"
+            aria-label="Go back"
           >
-            ← Back
+            ← <span className="hidden sm:inline">Back</span>
           </button>
         )}
 
         {!isPlaying ? (
-          <div className="relative z-10 flex h-full flex-col justify-end px-6 pb-4 md:px-12 md:pb-6 space-y-3 max-w-4xl">
-            <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold">
+          <div className="relative z-10 flex h-full flex-col justify-end px-4 pb-6 sm:px-6 sm:pb-8 md:px-12 md:pb-12 space-y-2 sm:space-y-3 md:space-y-4 max-w-5xl">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-black bg-gradient-to-r from-white via-purple-100 to-white bg-clip-text text-transparent drop-shadow-2xl leading-tight">
               {title}
             </h1>
-            <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm text-gray-300">
-              {year && <span>{year}</span>}
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm md:text-base text-gray-300">
+              {year && <span className="px-2.5 py-1 md:px-3 md:py-1 rounded-full bg-white/10 backdrop-blur-sm">{year}</span>}
               {runtime && (
-                <span>
+                <span className="px-2.5 py-1 md:px-3 md:py-1 rounded-full bg-white/10 backdrop-blur-sm">
                   {runtime}
                   min
                 </span>
               )}
-              {mediaType === 'tv' && <span>Series</span>}
+              {(mediaType === 'tv' || mediaType === 'anime') && <span className="px-2.5 py-1 md:px-3 md:py-1 rounded-full bg-white/10 backdrop-blur-sm">Series</span>}
             </div>
-            <p className="max-w-2xl text-sm md:text-base text-gray-200 line-clamp-3 md:line-clamp-none">
+            <p className="max-w-3xl text-sm sm:text-base md:text-lg text-gray-100 leading-relaxed drop-shadow-lg line-clamp-3 md:line-clamp-none">
               {details.overview}
             </p>
-            <div className="flex flex-wrap items-center gap-3 mt-2">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 sm:mt-3 md:mt-4">
               <button
                 type="button"
-                className="inline-flex items-center px-5 py-2 rounded-full text-sm md:text-base font-semibold bg-[#9146FF] hover:bg-[#772ce8] transition-colors shadow-lg shadow-black/40 cursor-pointer"
+                className="group inline-flex items-center px-5 py-2 sm:px-6 sm:py-2.5 md:px-8 md:py-3.5 rounded-full text-sm sm:text-base md:text-lg font-bold bg-[#9146FF] hover:bg-[#772ce8] transition-all duration-300 shadow-2xl shadow-purple-900/50 cursor-pointer active:scale-95 md:hover:scale-105"
                 onClick={() => {
                   setIsPlayerLoading(true);
                   setIsPlaying(true);
                 }}
               >
-                <span className="mr-2 inline-flex items-center justify-center">
-                  <span className="w-0 h-0 border-t-4 border-b-4 border-l-6 border-t-transparent border-b-transparent border-l-white" />
-                </span>
-                Play
+                <span className="mr-2 md:mr-3 text-xl md:text-2xl transition-transform group-hover:scale-110">▶</span>
+                <span className="hidden sm:inline">Play Now</span>
+                <span className="sm:hidden">Play</span>
               </button>
               {score && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/60 text-sm font-semibold">
-                  <span className="mr-2 text-yellow-400 text-base">★</span>
-                  Score
-                  {' '}
-                  {score}
+                <span className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-black/70 backdrop-blur-sm text-sm sm:text-base font-bold border border-white/10 shadow-xl">
+                  <span className="mr-1.5 sm:mr-2 text-yellow-400 text-base sm:text-lg">★</span>
+                  <span className="text-white">{score}</span>
                 </span>
               )}
             </div>
@@ -359,56 +415,56 @@ function Stream() {
       </div>
 
       {cast.length > 0 && (
-        <section className="px-4 md:px-8 pt-2 pb-6 space-y-4">
+        <section className="px-4 md:px-8 pt-4 pb-8 space-y-4">
           {(genresLabel || ageRating || seasonsLabel) && (
             <>
-              <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-300 mb-1">
+              <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-300 mb-2">
                 {genresLabel && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 text-[11px] md:text-xs truncate max-w-full md:max-w-lg">
+                  <span className="inline-flex items-center px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 text-xs md:text-sm">
                     {genresLabel}
                   </span>
                 )}
                 {ageRating && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-gray-600 bg-black/40 text-[11px] md:text-xs text-gray-100">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-[#9146ff]/30 bg-[#9146ff]/10 backdrop-blur-sm text-xs md:text-sm text-purple-200 font-semibold">
                     {ageRating}
                   </span>
                 )}
                 {seasonsLabel && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/5 text-[11px] md:text-xs">
+                  <span className="inline-flex items-center px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 text-xs md:text-sm">
                     {seasonsLabel}
                   </span>
                 )}
               </div>
-              <p className="text-[10px] md:text-[11px] text-gray-500 mb-3 max-w-full md:max-w-lg">
+              <p className="text-[10px] md:text-[11px] text-gray-500 mb-4 max-w-full md:max-w-2xl bg-zinc-900/50 rounded-lg p-3 border border-zinc-800">
                 Note: Audio language may vary by cloud server selected. If no official Hindi server
                 is available, try switching to the Flix server.
               </p>
             </>
           )}
-          <h2 className="text-lg md:text-xl font-semibold">Actors</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Cast</h2>
+          <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
             {cast.map((person) => (
               <div
                 key={person.id}
-                className="flex-shrink-0 w-24 md:w-32 bg-zinc-900 rounded-lg overflow-hidden"
+                className="flex-shrink-0 w-28 md:w-36 bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-xl overflow-hidden border border-white/5 hover:border-[#9146ff]/30 hover:scale-105 transition-all duration-300 shadow-lg"
               >
                 {person.profile_path ? (
                   <img
                     src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
                     alt={person.name}
-                    className="h-28 w-full object-cover"
+                    className="h-32 md:h-40 w-full object-cover"
                   />
                 ) : (
-                  <div className="h-28 w-full flex items-center justify-center text-xs text-gray-400">
+                  <div className="h-32 md:h-40 w-full flex items-center justify-center text-xs text-gray-400 bg-zinc-800">
                     {person.name}
                   </div>
                 )}
-                <div className="px-2 py-1">
-                  <p className="text-[11px] font-semibold truncate">
+                <div className="px-3 py-2">
+                  <p className="text-xs md:text-sm font-semibold truncate text-white">
                     {person.name}
                   </p>
                   {person.character && (
-                    <p className="text-[10px] text-gray-400 truncate">
+                    <p className="text-[10px] md:text-xs text-gray-400 truncate">
                       as
                       {' '}
                       {person.character}
@@ -421,34 +477,47 @@ function Stream() {
         </section>
       )}
 
-      {/* Full-screen player overlay */}
+      {/* Full-screen player overlay - Mobile optimized */}
       {isPlaying && playerSrc && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
-          <div className="relative w-full h-full md:w-[90vw] md:h-[90vh]">
+        <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+          <div className="relative w-full h-full">
             <button
               type="button"
               onClick={() => {
                 setIsPlaying(false);
                 setIsPlayerLoading(false);
               }}
-              className="absolute right-4 top-4 z-10 rounded-full bg-black/70 px-3 py-1 text-sm hover:bg-black cursor-pointer"
+              className="absolute right-2 top-2 md:right-4 md:top-4 z-20 rounded-full bg-black/90 px-4 py-2 md:px-3 md:py-1 text-base md:text-sm hover:bg-black cursor-pointer backdrop-blur-sm border border-white/20 shadow-lg active:scale-95 transition-transform"
+              aria-label="Close player"
             >
-              ✕ Close
+              ✕ <span className="hidden md:inline">Close</span>
             </button>
             <div className="absolute inset-0">
               <iframe
                 title={title}
                 src={playerSrc}
                 className="w-full h-full border-0"
-                allow="autoplay; fullscreen; picture-in-picture"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-presentation"
+                allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+                sandbox="allow-same-origin allow-scripts allow-forms"
                 referrerPolicy="no-referrer"
                 allowFullScreen
                 onLoad={() => setIsPlayerLoading(false)}
+                loading="lazy"
+                importance="high"
+                // Security attributes to block ads, popups, and redirects
+                data-block-popups="true"
+                // Mobile optimization
+                style={{
+                  WebkitOverflowScrolling: 'touch',
+                  transform: 'translate3d(0, 0, 0)',
+                }}
               />
               {isPlayerLoading && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black">
-                  <div className="h-12 w-12 rounded-full border-4 border-[#9146FF] border-t-transparent animate-spin" />
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-12 w-12 md:h-16 md:w-16 rounded-full border-4 border-[#9146FF] border-t-transparent animate-spin" />
+                    <p className="text-white text-sm md:text-base">Loading player...</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -458,11 +527,11 @@ function Stream() {
 
       {/* Movie: More like this (poster grid) */}
       {mediaType !== 'tv' && recommended.length > 0 && (
-        <section className="px-4 md:px-8 pb-10 space-y-3">
-          <h2 className="text-lg md:text-xl font-semibold">
+        <section className="px-4 md:px-8 pb-12 space-y-4">
+          <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
             More Like This
           </h2>
-          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 md:gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
             {recommended.slice(0, 18).map((item) => {
               const img = item.poster_path
                 ? `https://image.tmdb.org/t/p/w342${item.poster_path}`
@@ -476,7 +545,7 @@ function Stream() {
                 <button
                   type="button"
                   key={item.id}
-                  className="bg-zinc-900 rounded-lg overflow-hidden text-left hover:scale-[1.02] hover:z-10 transition-transform cursor-pointer"
+                  className="group bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-lg overflow-hidden text-left hover:scale-105 hover:z-10 transition-all duration-300 cursor-pointer border border-white/5 hover:border-[#9146ff]/30 shadow-lg"
                   onClick={() => navigate(`/stream/${mediaType}/${item.id}`)}
                 >
                   {img ? (
@@ -486,12 +555,12 @@ function Stream() {
                       className="w-full aspect-[2/3] object-cover"
                     />
                   ) : (
-                    <div className="w-full aspect-[2/3] flex items-center justify-center text-xs text-gray-300 px-2 text-center">
+                    <div className="w-full aspect-[2/3] flex items-center justify-center text-xs text-gray-300 px-2 text-center bg-zinc-800">
                       {recTitle}
                     </div>
                   )}
-                  <div className="px-2 py-1">
-                    <p className="text-[11px] md:text-xs font-semibold truncate">
+                  <div className="px-2 py-2">
+                    <p className="text-xs md:text-sm font-semibold truncate text-white">
                       {recTitle}
                     </p>
                   </div>

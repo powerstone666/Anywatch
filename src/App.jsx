@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import Home from './Home/home';
 import Navbar from './Navbar/navbar';
 import Stream from './Stream/stream';
@@ -8,6 +9,13 @@ import Movies from './Movies/movies';
 import NewPopular from './NewPopular/newPopular';
 
 function App() {
+  const location = useLocation();
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   return (
     <>
       <Navbar />

@@ -200,7 +200,7 @@ export async function fetchDiscoverMedia({
 }
 
 export async function fetchTrendingTodayMedia(mediaType = 'movie', { forceRefresh = false } = {}) {
-  const kind = mediaType === 'tv' ? 'tv' : 'movie';
+  const kind = (mediaType === 'tv' || mediaType === 'anime') ? 'tv' : 'movie';
   const now = Date.now();
   const cached = trendingTodayCache[kind];
 
@@ -225,7 +225,7 @@ export async function fetchMediaDetails(mediaType = 'movie', id) {
     throw new Error('Missing media id.');
   }
 
-  const kind = mediaType === 'tv' ? 'tv' : 'movie';
+  const kind = (mediaType === 'tv' || mediaType === 'anime') ? 'tv' : 'movie';
   const key = `${kind}:${id}`;
   const now = Date.now();
   const cached = detailsCache.get(key);
@@ -250,7 +250,7 @@ export async function fetchRecommendations(mediaType = 'movie', id) {
     throw new Error('Missing media id.');
   }
 
-  const kind = mediaType === 'tv' ? 'tv' : 'movie';
+  const kind = (mediaType === 'tv' || mediaType === 'anime') ? 'tv' : 'movie';
   const key = `recs:${kind}:${id}`;
   const now = Date.now();
   const cached = recommendationsCache.get(key);
@@ -293,4 +293,30 @@ export async function fetchSeasonDetails(id, seasonNumber) {
   });
 
   return data;
+}
+
+export async function fetchSimilar(mediaType = 'movie', id) {
+  if (!id) {
+    throw new Error('Missing media id.');
+  }
+
+  const kind = (mediaType === 'tv' || mediaType === 'anime') ? 'tv' : 'movie';
+  const key = `similar:${kind}:${id}`;
+  const now = Date.now();
+  const cached = recommendationsCache.get(key);
+
+  if (cached && now - cached.lastFetched < ONE_WEEK_MS) {
+    return cached.data;
+  }
+
+  const url = `/${kind}/${id}/similar?language=en-IN`;
+  const data = await fetchJson(url);
+  const results = Array.isArray(data.results) ? data.results : [];
+
+  recommendationsCache.set(key, {
+    data: results,
+    lastFetched: Date.now(),
+  });
+
+  return results;
 }
