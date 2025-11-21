@@ -22,23 +22,40 @@ function Stream() {
   const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayerLoading, setIsPlayerLoading] = useState(false);
-  const lockLandscape = async () => {
+  const enterFullscreenAndLockLandscape = async () => {
     try {
+      const element = document.documentElement;
+      if (element.requestFullscreen) {
+        await element.requestFullscreen();
+      } else if (element.webkitRequestFullscreen) {
+        await element.webkitRequestFullscreen();
+      } else if (element.msRequestFullscreen) {
+        await element.msRequestFullscreen();
+      }
+
       if (screen.orientation && screen.orientation.lock) {
         await screen.orientation.lock('landscape');
       }
     } catch (err) {
-      console.warn('Orientation lock not supported:', err);
+      console.warn('Fullscreen or orientation lock failed:', err);
     }
   };
 
-  const unlockOrientation = () => {
+  const exitFullscreenAndUnlock = async () => {
     try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        await document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        await document.msExitFullscreen();
+      }
+
       if (screen.orientation && screen.orientation.unlock) {
         screen.orientation.unlock();
       }
     } catch (err) {
-      console.warn('Orientation unlock failed:', err);
+      console.warn('Exit fullscreen or orientation unlock failed:', err);
     }
   };
 
@@ -63,7 +80,7 @@ function Stream() {
   }, [isPlaying]);
 
   // Ensure orientation unlock when component unmounts
-  useEffect(() => () => unlockOrientation(), []);
+  useEffect(() => () => exitFullscreenAndUnlock(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +89,8 @@ function Stream() {
       try {
         setLoading(true);
         setError(null);
+        setSelectedSeason(null);
+        setSeasonEpisodes({});
 
         const data = await fetchMediaDetails(mediaType, id);
         if (cancelled) return;
@@ -148,7 +167,7 @@ function Stream() {
     const defaultSeason =
       seasonsArr.find((s) => s.season_number > 0) || seasonsArr[0];
 
-    if (defaultSeason && defaultSeason.season_number !== selectedSeason) {
+    if (defaultSeason && selectedSeason === null) {
       setSelectedSeason(defaultSeason.season_number);
     }
   }, [mediaType, details, selectedSeason]);
@@ -382,7 +401,7 @@ function Stream() {
                 type="button"
                 className="group inline-flex items-center px-5 py-2 sm:px-6 sm:py-2.5 md:px-8 md:py-3.5 rounded-full text-sm sm:text-base md:text-lg font-bold bg-[#9146FF] hover:bg-[#772ce8] transition-all duration-300 shadow-2xl shadow-purple-900/50 cursor-pointer active:scale-95 md:hover:scale-105"
                 onClick={() => {
-                  lockLandscape();
+                  enterFullscreenAndLockLandscape();
                   setIsPlayerLoading(true);
                   setIsPlaying(true);
                 }}
@@ -474,7 +493,7 @@ function Stream() {
             <button
               type="button"
               onClick={() => {
-                unlockOrientation();
+                exitFullscreenAndUnlock();
                 setIsPlaying(false);
                 setIsPlayerLoading(false);
               }}
