@@ -22,6 +22,25 @@ function Stream() {
   const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayerLoading, setIsPlayerLoading] = useState(false);
+  const lockLandscape = async () => {
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        await screen.orientation.lock('landscape');
+      }
+    } catch (err) {
+      console.warn('Orientation lock not supported:', err);
+    }
+  };
+
+  const unlockOrientation = () => {
+    try {
+      if (screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    } catch (err) {
+      console.warn('Orientation unlock failed:', err);
+    }
+  };
 
   // Ensure we start at the top whenever this page mounts
   useEffect(() => {
@@ -43,38 +62,8 @@ function Stream() {
     };
   }, [isPlaying]);
 
-  // Lock screen orientation to landscape on mobile when playing
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const lockOrientation = async () => {
-      try {
-        // Check if screen orientation API is supported
-        if (screen.orientation && screen.orientation.lock) {
-          await screen.orientation.lock('landscape');
-        }
-      } catch (err) {
-        // Orientation lock failed or not supported, continue anyway
-        console.log('Orientation lock not supported:', err);
-      }
-    };
-
-    const unlockOrientation = () => {
-      try {
-        if (screen.orientation && screen.orientation.unlock) {
-          screen.orientation.unlock();
-        }
-      } catch (err) {
-        console.log('Orientation unlock failed:', err);
-      }
-    };
-
-    lockOrientation();
-
-    return () => {
-      unlockOrientation();
-    };
-  }, [isPlaying]);
+  // Ensure orientation unlock when component unmounts
+  useEffect(() => () => unlockOrientation(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -393,6 +382,7 @@ function Stream() {
                 type="button"
                 className="group inline-flex items-center px-5 py-2 sm:px-6 sm:py-2.5 md:px-8 md:py-3.5 rounded-full text-sm sm:text-base md:text-lg font-bold bg-[#9146FF] hover:bg-[#772ce8] transition-all duration-300 shadow-2xl shadow-purple-900/50 cursor-pointer active:scale-95 md:hover:scale-105"
                 onClick={() => {
+                  lockLandscape();
                   setIsPlayerLoading(true);
                   setIsPlaying(true);
                 }}
@@ -484,6 +474,7 @@ function Stream() {
             <button
               type="button"
               onClick={() => {
+                unlockOrientation();
                 setIsPlaying(false);
                 setIsPlayerLoading(false);
               }}
