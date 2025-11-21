@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -8,6 +9,11 @@ export default defineConfig({
     // Ensure React is only bundled once. Duplicate React copies can break hooks in
     // third-party libs (MUI) and trigger errors like "Cannot read properties of undefined (reading 'useLayoutEffect')".
     dedupe: ['react', 'react-dom'],
+    alias: {
+      react: path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      'react/jsx-runtime': path.resolve(__dirname, 'node_modules/react/jsx-runtime'),
+    },
   },
   plugins: [
     react({
