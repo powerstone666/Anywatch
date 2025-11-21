@@ -1,18 +1,23 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, IconButton, Box } from "@mui/material";
-import {
-  Menu as MenuIcon,
-  Search as SearchIcon,
-  Close as CloseIcon,
-  ArrowBack as ArrowBackIcon,
-  Home as HomeIcon,
-  LiveTv as TvIcon,
-  Movie as MovieIcon,
-  TrendingUp as TrendingUpIcon,
-  Cast as CastIcon,
-  GetApp as GetAppIcon
-} from "@mui/icons-material";
+import Drawer from "@mui/material/Drawer";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import IconButton from "@mui/material/IconButton";
+import Box from "@mui/material/Box";
+import MenuIcon from "@mui/icons-material/Menu";
+import SearchIcon from "@mui/icons-material/Search";
+import CloseIcon from "@mui/icons-material/Close";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import HomeIcon from "@mui/icons-material/Home";
+import TvIcon from "@mui/icons-material/LiveTv";
+import MovieIcon from "@mui/icons-material/Movie";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import CastIcon from "@mui/icons-material/Cast";
+import GetAppIcon from "@mui/icons-material/GetApp";
 
 function Navbar() {
   const navigate = useNavigate();
