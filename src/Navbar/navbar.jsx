@@ -1,25 +1,66 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import IconButton from "@mui/material/IconButton";
-import MenuIcon from "@mui/icons-material/Menu";
-import SearchIcon from "@mui/icons-material/Search";
-import Drawer from "@mui/material/Drawer";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import TextField from "@mui/material/TextField";
-import HomeIcon from "@mui/icons-material/Home";
-import TvIcon from "@mui/icons-material/Tv";
-import MovieIcon from "@mui/icons-material/Movie";
-import TheaterIcon from "@mui/icons-material/TheaterComedy";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import CloseIcon from "@mui/icons-material/Close";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import InputAdornment from "@mui/material/InputAdornment";
-import CastIcon from "@mui/icons-material/Cast";
-import GetAppIcon from "@mui/icons-material/GetApp";
+
+// Simple icon components to replace MUI icons
+const MenuIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+const ArrowBackIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+  </svg>
+);
+
+const HomeIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+  </svg>
+);
+
+const TvIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+  </svg>
+);
+
+const MovieIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+  </svg>
+);
+
+const TrendingUpIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+  </svg>
+);
+
+const CastIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+  </svg>
+);
+
+const GetAppIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+  </svg>
+);
 
 function Navbar() {
   const navigate = useNavigate();
@@ -192,30 +233,30 @@ function Navbar() {
 
         {/* Right controls - search & region */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Mobile: show search icon + hamburger (Material UI) */}
+          {/* Mobile: show search icon + hamburger */}
           <div className="flex items-center gap-2 sm:hidden">
-            <IconButton
-              size="medium"
+            <button
+              type="button"
               aria-label="open search"
               onClick={toggleSearch(true)}
-              sx={{ color: '#9146ff', '&:hover': { color: '#b097ff' }, p: 0.5 }}
+              className="p-2 rounded-lg text-[#9146ff] hover:text-[#b097ff] hover:bg-white/5 transition-all"
             >
-              <SearchIcon fontSize="medium" color="inherit" sx={{ fontSize: 20 }} />
-            </IconButton>
-            <IconButton
-              size="medium"
+              <SearchIcon />
+            </button>
+            <button
+              type="button"
               aria-label="open menu"
               onClick={toggleMenu(true)}
-              sx={{ color: '#9146ff', '&:hover': { color: '#b097ff' }, p: 0.5 }}
+              className="p-2 rounded-lg text-[#9146ff] hover:text-[#b097ff] hover:bg-white/5 transition-all"
             >
-              <MenuIcon fontSize="medium" color="inherit" sx={{ fontSize: 22 }} />
-            </IconButton>
+              <MenuIcon />
+            </button>
           </div>
 
           {/* Desktop: full search input */}
           <div className="relative hidden sm:block">
             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center" aria-hidden>
-              <SearchIcon fontSize="small" className="text-gray-400" />
+              <SearchIcon />
             </span>
             <input
               type="text"
@@ -246,32 +287,24 @@ function Navbar() {
 
           {/* PWA Install Button */}
           {!isStandalone && showInstallButton && deferredPrompt && (
-            <IconButton
+            <button
+              type="button"
               onClick={handleInstallClick}
-              size="medium"
               aria-label="Install app"
-              sx={{
-                color: '#9146ff', // Twitch-like purple
-                border: '1px solid #9146ff55',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                '&:hover': { color: '#b097ff', borderColor: '#9146ff' },
-                p: 0.5
-              }}
+              className="p-2 rounded-xl text-[#9146ff] border border-[#9146ff]/30 hover:text-[#b097ff] hover:border-[#9146ff] transition-all"
               title={deferredPrompt ? 'Install AnyWatch' : 'Install from your browser menu'}
             >
-              <GetAppIcon fontSize="medium" />
-            </IconButton>
+              <GetAppIcon />
+            </button>
           )}
 
-          <IconButton
-            size="medium"
+          <button
+            type="button"
             aria-label="cast"
-            className="hidden sm:inline-flex"
-            sx={{ color: '#9146ff', '&:hover': { color: '#b097ff' }, p: 0.5 }}
+            className="hidden sm:inline-flex p-2 rounded-lg text-[#9146ff] hover:text-[#b097ff] hover:bg-white/5 transition-all"
           >
-            <CastIcon fontSize="medium" />
-          </IconButton>
+            <CastIcon />
+          </button>
         </div>
 
         {/* Mobile widgets: Drawer + Dialog */}
@@ -287,41 +320,42 @@ function MobileCategoryDrawer({ open, onClose }) {
   const navigate = useNavigate();
 
   const items = [
-    { text: "Home", icon: <HomeIcon color="inherit" /> },
-    { text: "Shows", icon: <TvIcon color="inherit" /> },
-    { text: "Movies", icon: <MovieIcon color="inherit" /> },
-    { text: "New & popular", icon: <TrendingUpIcon color="inherit" /> },
+    { text: "Home", icon: <HomeIcon />, path: "/" },
+    { text: "Shows", icon: <TvIcon />, path: "/shows" },
+    { text: "Movies", icon: <MovieIcon />, path: "/movies" },
+    { text: "New & popular", icon: <TrendingUpIcon />, path: "/new" },
   ];
 
+  if (!open) return null;
+
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
-      transitionDuration={300}
-      PaperProps={{ sx: { height: '100vh', width: 256, bgcolor: '#0a0a0a', backdropFilter: 'blur(20px)', borderLeft: '1px solid rgba(255,255,255,0.1)' } }}
-    >
-  <List className="h-full w-64 bg-gradient-to-br from-black via-zinc-950 to-black px-3 flex flex-col justify-center space-y-3">
-        {items.map((item) => (
-          <ListItem key={item.text} disablePadding className="shrink-0">
-            <ListItemButton
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-in fade-in duration-300"
+        onClick={onClose}
+      />
+      
+      {/* Drawer */}
+      <div className="fixed right-0 top-0 bottom-0 w-64 bg-gradient-to-br from-black via-zinc-950 to-black border-l border-white/10 z-50 animate-in slide-in-from-right duration-300">
+        <div className="h-full flex flex-col justify-center px-3 space-y-3">
+          {items.map((item) => (
+            <button
+              key={item.text}
+              type="button"
               onClick={() => {
-                if (item.text === "Home") {
-                  navigate("/");
-                }
+                navigate(item.path);
                 onClose();
               }}
-              className="py-4 px-4 rounded-xl hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-[#9146ff]/30 hover:shadow-lg hover:shadow-[#9146ff]/10"
+              className="flex items-center gap-4 py-4 px-4 rounded-xl hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-[#9146ff]/30 hover:shadow-lg hover:shadow-[#9146ff]/10 text-white"
             >
-              <ListItemIcon sx={{ color: '#9146ff' }} className="min-w-11">
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText primary={item.text} className="text-white" primaryTypographyProps={{ fontWeight: 600, fontSize: '1rem' }} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </Drawer>
+              <span className="text-[#9146ff]">{item.icon}</span>
+              <span className="font-semibold text-base">{item.text}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -345,59 +379,41 @@ function MobileSearchDialog({ open, onClose }) {
     <div className="fixed inset-x-0 top-16 z-20 bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl animate-in slide-in-from-top duration-300">
       <div className="p-4 max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
-          <IconButton onClick={onClose} sx={{ color: '#9146ff', '&:hover': { color: '#b097ff' } }} aria-label="back">
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-lg text-[#9146ff] hover:text-[#b097ff] hover:bg-white/5 transition-all"
+            aria-label="back"
+          >
             <ArrowBackIcon />
-          </IconButton>
-          <TextField
-            autoFocus
-            fullWidth
-            placeholder="Search movies, shows..."
-            variant="outlined"
-            value={value}
-            onChange={(e) => {
-              const next = e.target.value;
-              setValue(next);
-              const params = new URLSearchParams();
-              if (next.trim()) {
-                params.set("q", next);
-              }
-              navigate(`/search?${params.toString()}`);
-            }}
-            slotProps={{
-              input: { className: 'text-white' },
-            }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setValue("")}
-                    sx={{ color: value ? '#9146ff' : '#6b7280' }}
-                    aria-label="clear"
-                    size="small"
-                  >
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '9999px',
-                bgcolor: 'rgba(17,24,39,0.8)',
-                '& fieldset': {
-                  borderColor: '#374151',
-                },
-                '&:hover fieldset': {
-                  borderColor: '#7c3aed',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#9146ff',
-                  boxShadow: '0 0 0 6px rgba(145,70,255,0.12)',
-                },
-              },
-              input: { color: '#fff' },
-            }}
-          />
+          </button>
+          <div className="relative flex-1">
+            <input
+              type="text"
+              autoFocus
+              placeholder="Search movies, shows..."
+              value={value}
+              onChange={(e) => {
+                const next = e.target.value;
+                setValue(next);
+                const params = new URLSearchParams();
+                if (next.trim()) {
+                  params.set("q", next);
+                }
+                navigate(`/search?${params.toString()}`);
+              }}
+              className="w-full rounded-full border border-gray-600 bg-gray-900/80 px-4 py-2.5 pr-12 text-white outline-none placeholder:text-gray-400 focus:border-[#9146ff] focus:ring-2 focus:ring-[#9146ff]/30 transition-all"
+            />
+            <button
+              type="button"
+              onClick={() => setValue("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 transition-all"
+              style={{ color: value ? '#9146ff' : '#6b7280' }}
+              aria-label="clear"
+            >
+              <CloseIcon />
+            </button>
+          </div>
         </div>
       </div>
     </div>
