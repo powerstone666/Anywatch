@@ -18,6 +18,20 @@ function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Prevent PWA navigation from appearing in Chrome history
+  useEffect(() => {
+    // Check if running as PWA (standalone mode)
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                  window.navigator.standalone || 
+                  document.referrer.includes('android-app://');
+
+    if (isPWA) {
+      // Replace current history entry to prevent adding to Chrome history
+      const currentPath = location.pathname + location.search + location.hash;
+      window.history.replaceState(null, '', currentPath);
+    }
+  }, [location]);
+
   return (
     <>
       <Analytics />
