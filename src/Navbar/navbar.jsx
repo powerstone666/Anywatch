@@ -1,5 +1,6 @@
 import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { usePrivateNavigate } from "../hooks/usePrivateNavigate";
 import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -20,7 +21,7 @@ import CastIcon from "@mui/icons-material/Cast";
 import GetAppIcon from "@mui/icons-material/GetApp";
 
 function Navbar() {
-  const navigate = useNavigate();
+  const navigate = usePrivateNavigate();
   const location = useLocation();
   const [searchText, setSearchText] = React.useState("");
   const [isPrompting, setIsPrompting] = React.useState(false);
@@ -365,7 +366,7 @@ function Navbar() {
 
 // Dialog for mobile search
 function MobileSearchDialog({ open, onClose }) {
-  const navigate = useNavigate();
+  const navigate = usePrivateNavigate();
   const location = useLocation();
   const [value, setValue] = React.useState("");
 

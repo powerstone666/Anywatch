@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import { useNavigate } from 'react-router-dom';
+import { usePrivateNavigate } from '../hooks/usePrivateNavigate';
 import { fetchDiscoverMedia, fetchTrendingTodayMedia } from '../Api-services/tmbd';
 const year=new Date().getFullYear();
 export const ROWS = [
@@ -306,7 +306,7 @@ function getImageUrls(item) {
 }
 
 function Cards({ rows = ROWS }) {
-  const navigate = useNavigate();
+  const navigate = usePrivateNavigate();
   const [rowsData, setRowsData] = useState({});
   const [loading, setLoading] = useState(true);
 

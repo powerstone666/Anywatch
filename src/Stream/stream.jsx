@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { usePrivateNavigate } from '../hooks/usePrivateNavigate';
 import {
   fetchMediaDetails,
   fetchRecommendations,
@@ -9,7 +10,7 @@ import {
 
 function Stream() {
   const { mediaType = 'movie', id } = useParams();
-  const navigate = useNavigate();
+  const navigate = usePrivateNavigate();
 
   const [details, setDetails] = useState(null);
   const [trailerKey, setTrailerKey] = useState(null);

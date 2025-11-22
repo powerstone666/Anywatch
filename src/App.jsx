@@ -18,26 +18,6 @@ function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Privacy: Replace history entries with home URL in PWA mode
-  // This prevents specific movie/show URLs from appearing in Chrome history
-  useEffect(() => {
-    // Check if running as PWA (standalone mode)
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                  window.navigator.standalone || 
-                  document.referrer.includes('android-app://');
-
-    if (isPWA) {
-      // Replace the URL in browser history with "/" to hide watched content
-      // The app still works normally, but Chrome history only shows "Lume" homepage
-      const currentState = window.history.state;
-      window.history.replaceState(
-        currentState, 
-        '', 
-        '/' // Always show homepage in browser history
-      );
-    }
-  }, [location]);
-
   return (
     <>
       <Analytics />

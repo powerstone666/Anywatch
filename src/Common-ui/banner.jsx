@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { usePrivateNavigate } from '../hooks/usePrivateNavigate';
 import { useDispatch, useSelector } from 'react-redux';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
@@ -12,7 +12,7 @@ import { setTrendingMovies } from '../StateManager/Context';
 const TRENDING_INDIA_KEY = 'trending-in-india';
 
 function Banner({ category = TRENDING_INDIA_KEY }) {
-  const navigate = useNavigate();
+  const navigate = usePrivateNavigate();
   const dispatch = useDispatch();
   const trendingMovies = useSelector((state) => state.trending.movies);
 
